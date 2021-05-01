@@ -1,0 +1,29 @@
+name: Go
+
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [1.12, 1.13, 1.14, 1.15, 1.16]
+        etcd: [3.1.20, 3.3.25, 3.2.32, 3.4.15, 3.5.0-alpha.0]
+    steps:
+    - uses: actions/checkout@v2
+    - run: curl -L https://github.com/etcd-io/etcd/releases/download/v${{ matrix.etcd }}/etcd-v${{ matrix.etcd }}-linux-amd64.tar.gz -o /tmp/etcd-${{ matrix.etcd }}-linux-amd64.tar.gz
+    - run: mkdir -p /tmp/etcd
+    - run: tar xzvf /tmp/etcd-${{ matrix.etcd }}-linux-amd64.tar.gz -C /tmp/etcd --strip-components=1
+    - run: /tmp/etcd/etcd > /dev/null &
+
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go }}
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -v -race -coverprofile=coverage.txt -covermode=atomic
+    - name: codecov
+        bash <(curl -s https://codecov.io/bash)
+
