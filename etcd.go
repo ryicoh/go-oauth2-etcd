@@ -145,7 +145,7 @@ func (s *TokenStore) Create(ctx context.Context, info oauth2.TokenInfo) error {
 	}
 
 	if code := info.GetCode(); code != "" {
-		lease, err := s.cli.Grant(ctx, int64(info.GetCodeExpiresIn()))
+		lease, err := s.cli.Grant(ctx, int64(info.GetCodeExpiresIn().Seconds()))
 		if err != nil {
 			return err
 		}
@@ -157,11 +157,11 @@ func (s *TokenStore) Create(ctx context.Context, info oauth2.TokenInfo) error {
 
 		ops := make([]clientv3.Op, 0, 3)
 		txn := s.cli.Txn(ctx)
-		aexpLease, err := s.cli.Grant(ctx, int64(aexp))
+		aexpLease, err := s.cli.Grant(ctx, int64(aexp.Seconds()))
 		if err != nil {
 			return err
 		}
-		rexpLease, err := s.cli.Grant(ctx, int64(rexp))
+		rexpLease, err := s.cli.Grant(ctx, int64(rexp.Seconds()))
 		if err != nil {
 			return err
 		}
